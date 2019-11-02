@@ -76,8 +76,14 @@ spec:
           - "--entryPoints.web.address=:{{ .Values.ports.web.port }}"
           - "--entryPoints.websecure.address=:{{ .Values.ports.websecure.port }}"
           - "--entryPoints.traefik.address=:{{ .Values.ports.traefik.port }}"
+          {{- if .Values.dashboard.enabled }}
           - "--api.dashboard=true"
           - "--api.insecure=true"
+          {{- end }}
           - "--ping=true"
           - "--providers.kubernetescrd"
           - "--log.level={{ .Values.logs.loglevel }}"
+          {{- if and .Values.metrics.prometheus .Values.metrics.prometheus.enabled }}
+          - "--metrics.prometheus=true"
+          - "--metrics.prometheus.entryPoint=traefik"
+          {{- end }}

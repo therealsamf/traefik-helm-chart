@@ -7,6 +7,12 @@ metadata:
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     release: {{ .Release.Name | quote }}
     heritage: {{ .Release.Service | quote }}
+  annotations:
+  {{- if .Values.service }}
+  {{- range $key, $value := .Values.service.annotations }}
+    {{ $key }}: {{ $value | quote }}
+  {{- end }}
+  {{- end }}
 spec:
   type: LoadBalancer
   externalTrafficPolicy: {{ default "Cluster" .Values.service.externalTrafficPolicy }}

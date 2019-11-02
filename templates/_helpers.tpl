@@ -31,3 +31,14 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Create a default domain name for the IngressRoute created for the dashboard to match
+*/}}
+{{- define "traefik.dashboard.domainName" -}}
+{{- if or (not .Values.domain) (eq .Values.domain "") -}}
+{{- .Values.dashboard.domain -}}
+{{- else -}}
+{{ printf "traefik.%s" .Values.domain -}}
+{{- end -}}
+{{- end -}}

@@ -1,7 +1,9 @@
+{{- if .Values.dashboard.enabled }}
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: {{ template "traefik.fullname" . }}-dashboard
+  namespace: {{ .Release.Namespace }}
   annotations:
     helm.sh/hook: "post-install"
   labels:
@@ -11,10 +13,13 @@ metadata:
     heritage: {{ .Release.Service | quote }}
 spec:
   entryPoints:
-    - web
+    - websecure
   routes:
-  - match: PathPrefix(`/dashboard`) || PathPrefix(`/api`)
+  - match: Host(`{{ template "traefik.dashboard.domainName" . }}`)
     kind: Rule
     services:
     - name:  {{ template "traefik.fullname" . }}-dashboard
       port: 80
+  tls:
+    secretName: {{ .Values.dashboard.secretName }}
+{{- end }}

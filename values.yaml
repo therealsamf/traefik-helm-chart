@@ -16,6 +16,29 @@ ports:
 #
 #service:
 #  externalTrafficPolicy: Cluster
+#
+
+middlewares:
+  httpsRedirect:
+    enabled: true
+    name: "traefik-https-redirect"
+    ingressRoute:
+      enabled: true
+#domain: ""
+
+metrics:
+  prometheus:
+    enabled: true
+    # buckets:
+    # - "0.100000"
+    # - "0.300000"
+    # - "1.200000"
+    # - "5.000000"
+
+dashboard:
+  enabled: true
+  domain: ""
+  #secretName:
 
 logs:
   loglevel: INFO
