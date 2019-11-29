@@ -4,11 +4,9 @@ metadata:
   name: middlewares.traefik.containo.us
   annotations:
     "helm.sh/hook": "crd-install"
+    "helm.sh/hook-delete-policy": "before-hook-creation"
   labels:
-    app: {{ template "traefik.name" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    release: {{ .Release.Name | quote }}
-    heritage: {{ .Release.Service | quote }}
+    {{ template "traefik.labels" . }}
 spec:
   group: traefik.containo.us
   version: v1alpha1

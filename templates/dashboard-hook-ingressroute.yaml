@@ -1,4 +1,5 @@
-{{- if .Values.dashboard.enabled }}
+{{- if .Values.dashboard -}}
+{{- if .Values.dashboard.enabled -}}
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
@@ -7,19 +8,23 @@ metadata:
   annotations:
     helm.sh/hook: "post-install"
   labels:
-    app: {{ template "traefik.name" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    release: {{ .Release.Name | quote }}
-    heritage: {{ .Release.Service | quote }}
+    {{- (include "traefik.labels" .) | nindent 4 }}
 spec:
   entryPoints:
-    - websecure
+    - web
   routes:
-  - match: Host(`{{ template "traefik.dashboard.domainName" . }}`)
+  {{- if .Values.domain }}
+  - match: Host(`traefik.{{ .Values.domain }}`)
+  {{- else }}
+  - match: PathPrefix(`/dashboard`) || PathPrefix(`/api`)
+  {{- end }}
     kind: Rule
     services:
-    - name:  {{ template "traefik.fullname" . }}-dashboard
-      port: 80
+    - name: api@internal
+      kind: TraefikService
+  {{- if .Values.dashboard.secretName }}
   tls:
     secretName: {{ .Values.dashboard.secretName }}
-{{- end }}
+  {{- end }}
+{{- end -}}
+{{- end -}}

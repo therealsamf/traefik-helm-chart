@@ -3,26 +3,29 @@ kind: Service
 metadata:
   name: {{ template "traefik.fullname" . }}
   labels:
-    app: {{ template "traefik.name" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    release: {{ .Release.Name | quote }}
-    heritage: {{ .Release.Service | quote }}
-  annotations:
+    {{- (include "traefik.labels" .) | nindent 4 }}
   {{- if .Values.service }}
+  {{- if .Values.service.annotations }}
+  annotations:
   {{- range $key, $value := .Values.service.annotations }}
     {{ $key }}: {{ $value | quote }}
   {{- end }}
   {{- end }}
+  {{- end }}
 spec:
-  type: LoadBalancer
-  externalTrafficPolicy: {{ default "Cluster" .Values.service.externalTrafficPolicy }}
+  {{- $type := default "LoadBalancer" .Values.service.type }}
+  type: {{ $type }}
+  {{- with .Values.service.spec }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
   selector:
-    app: {{ template "traefik.name" . }}
-    release: {{ .Release.Name }}
+    "app.kubernetes.io/name": {{ template "traefik.name" . }}
+    "app.kubernetes.io/instance": {{ .Release.Name | quote }}
   ports:
-  - port: 80
-    name: web
-    targetPort: web
-  - port: 443
-    name: websecure
-    targetPort: websecure
+  {{- range $name, $config := .Values.ports }}
+  {{- if $config.expose }}
+  - port: {{ default $config.port $config.exposedPort }}
+    name: {{ $name }}
+    targetPort: {{ $name | quote }}
+  {{- end }}
+  {{- end }}

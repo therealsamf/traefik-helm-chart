@@ -7,23 +7,24 @@ kind: Deployment
 metadata:
   name: {{ template "traefik.fullname" . }}
   labels:
-    app: {{ template "traefik.name" . }}
-    chart: {{ template "traefik.chart" . }}
-    release: {{ .Release.Name | quote }}
-    heritage: {{ .Release.Service | quote }}
+{{ (include "traefik.labels" .) | indent 4 }}
 spec:
   replicas: {{ default 1 .Values.deployment.replicas }}
   selector:
     matchLabels:
-      app: {{ template "traefik.name" . }}
-      release: {{ .Release.Name }}
+      "app.kubernetes.io/name": {{ template "traefik.name" . }}
+      "app.kubernetes.io/instance": {{ .Release.Name | quote }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      {{- with .Values.rollingUpdate }}
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
   template:
     metadata:
       labels:
-        app: {{ template "traefik.name" . }}
-        chart: {{ template "traefik.chart" . }}
-        release: {{ .Release.Name | quote }}
-        heritage: {{ .Release.Service | quote }}
+        "app.kubernetes.io/name": {{ template "traefik.name" . }}
+        "app.kubernetes.io/instance": {{ .Release.Name | quote }}
     spec:
       serviceAccountName: {{ template "traefik.fullname" . }}
       terminationGracePeriodSeconds: 60
@@ -31,18 +32,16 @@ spec:
       - image: {{ .Values.image.name }}:{{ .Values.image.tag }}
         name: {{ template "traefik.fullname" . }}
         resources:
-        {{- if .Values.yaml }}
-        {{- if .Values.yaml.resources }}
-{{ toYaml .Values.yaml.resources | indent 10 }}
-        {{- end }}
-        {{- if .Values.yaml.tolerations }}
+          {{- with .Values.resources }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        {{- with .Values.tolerations }}
         tolerations:
-{{ toYaml .Values.yaml.tolerations | indent 8 }}
+          {{- toYaml . | nindent 10 }}
         {{- end }}
-        {{- if .Values.yaml.nodeSelector }}
+        {{- with .Values.nodeSelector }}
         nodeSelector:
-{{ toYaml .Values.yaml.nodeSelector | indent 10 }}
-        {{- end }}
+          {{- toYaml . | nindent 10 }}
         {{- end }}
         readinessProbe:
           httpGet:
@@ -63,27 +62,24 @@ spec:
           successThreshold: 1
           timeoutSeconds: 2
         ports:
-        - name: web
-          containerPort: {{ .Values.ports.web.port }}
+        {{- range $name, $config := .Values.ports }}
+        - name: {{ $name | quote }}
+          containerPort: {{ $config.port }}
           protocol: TCP
-        - name: websecure
-          containerPort: {{ .Values.ports.websecure.port }}
-          protocol: TCP
-        - name: traefik
-          containerPort: {{ .Values.ports.traefik.port }}
-          protocol: TCP
+        {{- end }}
         args:
-          - "--entryPoints.web.address=:{{ .Values.ports.web.port }}"
-          - "--entryPoints.websecure.address=:{{ .Values.ports.websecure.port }}"
-          - "--entryPoints.traefik.address=:{{ .Values.ports.traefik.port }}"
+          {{- range $name, $config := .Values.ports }}
+          - "--entryPoints.{{$name}}.address=:{{ $config.port }}"
+          {{- end }}
           {{- if .Values.dashboard.enabled }}
           - "--api.dashboard=true"
-          - "--api.insecure=true"
           {{- end }}
           - "--ping=true"
           - "--providers.kubernetescrd"
           - "--log.level={{ .Values.logs.loglevel }}"
-          {{- if and .Values.metrics.prometheus .Values.metrics.prometheus.enabled }}
+          {{- if .Values.metrics.prometheus }}
+          {{- if .Values.metrics.prometheus.enabled }}
           - "--metrics.prometheus=true"
           - "--metrics.prometheus.entryPoint=traefik"
+          {{- end }}
           {{- end }}

@@ -40,6 +40,7 @@ rules:
       - ingressroutetcps
       - middlewares
       - tlsoptions
+      - traefikservices
     verbs:
       - get
       - list

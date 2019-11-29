@@ -15,7 +15,7 @@ Create chart name and version as used by the chart label.
 {{- end -}}
 
 {{/*
-Create a default fully qualified app name.
+Create a default fully qualified app name.tlsoptions.traefik.containo.us
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
@@ -32,13 +32,10 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 {{- end -}}
 
-{{/*
-Create a default domain name for the IngressRoute created for the dashboard to match
-*/}}
-{{- define "traefik.dashboard.domainName" -}}
-{{- if or (not .Values.domain) (eq .Values.domain "") -}}
-{{- .Values.dashboard.domain -}}
-{{- else -}}
-{{ printf "traefik.%s" .Values.domain -}}
-{{- end -}}
+{{- define "traefik.labels" -}}
+"app.kubernetes.io/name": {{ template "traefik.name" . }}
+"helm.sh/chart": {{ .Chart.Name -}}-{{ .Chart.Version | replace "+" "_" }}
+"app.kubernetes.io/managed-by": {{ .Release.Service }}
+"app.kubernetes.io/instance": {{ .Release.Name | quote }}
+"app.kubernetes.io/version": {{ .Chart.AppVersion | quote }}
 {{- end -}}

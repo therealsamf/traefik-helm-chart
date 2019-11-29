@@ -1,14 +1,13 @@
-{{- if and .Values.middlewares.httpsRedirect .Values.middlewares.httpsRedirect.enabled }}
+{{- if .Values.middlewares }}
+{{- if .Values.middlewares.httpsRedirect }}
+{{- if .Values.middlewares.httpsRedirect.enabled }}
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: {{ .Values.middlewares.httpsRedirect.name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "traefik.name" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    release: {{ .Release.Name | quote }}
-    heritage: {{ .Release.Service | quote }}
+    {{- (include "traefik.labels" .) | nindent 4 }}
   annotations:
     helm.sh/hook: "post-install"
 spec:
@@ -16,7 +15,8 @@ spec:
     permanent: true
     scheme: https
 ---
-{{- if and .Values.middlewares.httpsRedirect.ingressRoute .Values.middlewares.httpsRedirect.ingressRoute.enabled }}
+{{- if .Values.middlewares.httpsRedirect.ingressRoute }}
+{{- if .Values.middlewares.httpsRedirect.ingressRoute.enabled }}
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
@@ -25,10 +25,7 @@ metadata:
   annotations:
     helm.sh/hook: "post-install"
   labels:
-    app: {{ template "traefik.name" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    release: {{ .Release.Name | quote }}
-    heritage: {{ .Release.Service | quote }}
+    {{- (include "traefik.labels" .) | nindent 4 }}
 spec:
   entryPoints:
   - web
@@ -42,5 +39,8 @@ spec:
     middlewares:
     - name: {{ .Values.middlewares.httpsRedirect.name }}
       namespace: {{ .Release.Namespace }}
-{{- end }} # if and .Values.middlewares.httpsRedirect.ingressRoute .Values.middlewares.httpsRedirect.ingressRoute.enabled
-{{- end }} # if and .Values.middlewares.httpsRedirect .Values.middlewares.httpsRedirect.enabled
+{{- end }} # if .Values.middlewares.httpsRedirect.ingressRoute.enabled
+{{- end }} # if .Values.middlewares.httpsRedirect.ingressRoute
+{{- end }} # if .Values.middlewares.httpsRedirect.enabled
+{{- end }} # if .Values.middlewares.httpsRedirect
+{{- end }} # if .Values.middlewares

@@ -1,0 +1,10 @@
+
+.kube/
+.minikube/
+
+Guidelines.md
+
+Makefile
+OWNERS
+
+*.tgz
